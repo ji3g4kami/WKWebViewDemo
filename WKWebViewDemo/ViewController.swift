@@ -11,64 +11,55 @@ class ViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    
+    guard let scriptPath = Bundle.main.path(forResource: "script", ofType: "js"),
+      let scriptSource = try? String(contentsOfFile: scriptPath) else {
+        return
+    }
 
-    if let script = generateCountButtonScript() {
-      contentController.addUserScript(script)
-    }
-    
-    if let script = generateAddCSSScript() {
-      contentController.addUserScript(script)
-    }
-    
+    let script = WKUserScript(source: scriptSource, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+    contentController.addUserScript(script)
     contentController.add(self, name: "count")
 
     config.userContentController = contentController
-    setupWebView(config: config, url: "https://google.com")
-  }
-  
-  func generateCountButtonScript() -> WKUserScript? {
-    guard let scriptPath = Bundle.main.path(forResource: "script", ofType: "js"),
-      let scriptSource = try? String(contentsOfFile: scriptPath) else {
-        return nil
-    }
-    
-    let script = WKUserScript(source: scriptSource, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-    
-    return script
-  }
-  
-  func generateAddCSSScript() -> WKUserScript? {
-    guard let cssPath = Bundle.main.path(forResource: "style", ofType: "css"),
-    let cssString = try? String(contentsOfFile: cssPath).components(separatedBy: .newlines).joined() else {
-      return nil
-    }
+    let html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        #countButton {
+          text-align: center;
+          position: relative;
+          font-size: 16px;
+          color: white;
+          padding: 20px 20px 20px 20px;
+          background: #e13232;
+          border-radius: 8%;
+      }
 
-    let source = """
-    var style = document.createElement('style');
-    style.innerHTML = '\(cssString)';
-    document.head.appendChild(style);
+        #countLabel {
+        font-size: 20px;
+        margin: 40px;
+      }
+      </style>
+    </head>
+    <body>
+      <p id="countLabel"></p>
+      <button id="countButton">Count</button>
+    </body>
+    </html>
     """
-    
-    let script = WKUserScript(source: source, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-    return script
-  }
-  
-  func setupWebView(config: WKWebViewConfiguration, url: String) {
     webView = WKWebView(frame: .zero, configuration: config)
-    view.addSubview(webView)
+    webView.loadHTMLString(html, baseURL: nil)
     
+    view.addSubview(webView)
     let layoutGuide = view.safeAreaLayoutGuide
     webView.translatesAutoresizingMaskIntoConstraints = false
     webView.leadingAnchor.constraint(equalTo: layoutGuide.leadingAnchor).isActive = true
     webView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor).isActive = true
     webView.topAnchor.constraint(equalTo: layoutGuide.topAnchor).isActive = true
     webView.bottomAnchor.constraint(equalTo: layoutGuide.bottomAnchor).isActive = true
-    
-    if let url = URL(string: url) {
-      webView.load(URLRequest(url: url))
-    }
   }
-  
 }
 
 extension ViewController: WKScriptMessageHandler {
