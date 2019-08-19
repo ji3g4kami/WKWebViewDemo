@@ -7,6 +7,8 @@ class ViewController: UIViewController {
   let config = WKWebViewConfiguration()
   let contentController = WKUserContentController()
   
+  var count = 0
+  
   override func viewDidLoad() {
     super.viewDidLoad()
 
@@ -17,6 +19,8 @@ class ViewController: UIViewController {
     if let script = generateAddCSSScript() {
       contentController.addUserScript(script)
     }
+    
+    contentController.add(self, name: "count")
 
     config.userContentController = contentController
     setupWebView(config: config, url: "https://google.com")
@@ -65,5 +69,16 @@ class ViewController: UIViewController {
     }
   }
   
+}
+
+extension ViewController: WKScriptMessageHandler {
+  func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    if message.name == "count", let messageBody = message.body as? String {
+      print(messageBody)
+      count += 1
+      let javascript = "document.getElementById(\"countLabel\").innerHTML = \"Count: \(count)\";"
+      webView.evaluateJavaScript(javascript, completionHandler: nil)
+    }
+  }
 }
 
