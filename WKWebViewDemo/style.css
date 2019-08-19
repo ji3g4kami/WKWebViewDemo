@@ -1,0 +1,18 @@
+#countButton {
+  text-align: center;
+  position: relative;
+  font-size: 16px;
+  color: white;
+  padding: 20px 20px 20px 20px;
+  background: #e13232;
+  border-radius: 8%;
+}
+
+#countLabel {
+  font-size: 20px;
+  margin: 40px;
+}
+
+#main {
+  display: flex;
+}

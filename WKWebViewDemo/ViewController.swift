@@ -4,24 +4,49 @@ import UIKit
 class ViewController: UIViewController {
   
   var webView: WKWebView!
+  let config = WKWebViewConfiguration()
+  let contentController = WKUserContentController()
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    
-//    let scriptSource = "document.body.style.backgroundColor = `red`;"
-    guard let scriptPath = Bundle.main.path(forResource: "script", ofType: "js"),
-     let scriptSource = try? String(contentsOfFile: scriptPath) else {
-      return
+
+    if let script = generateCountButtonScript() {
+      contentController.addUserScript(script)
     }
+    
+    if let script = generateAddCSSScript() {
+      contentController.addUserScript(script)
+    }
+
+    config.userContentController = contentController
+    setupWebView(config: config, url: "https://google.com")
+  }
+  
+  func generateCountButtonScript() -> WKUserScript? {
+    guard let scriptPath = Bundle.main.path(forResource: "script", ofType: "js"),
+      let scriptSource = try? String(contentsOfFile: scriptPath) else {
+        return nil
+    }
+    
     let script = WKUserScript(source: scriptSource, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
     
-    let contentController = WKUserContentController()
-    contentController.addUserScript(script)
+    return script
+  }
+  
+  func generateAddCSSScript() -> WKUserScript? {
+    guard let cssPath = Bundle.main.path(forResource: "style", ofType: "css"),
+    let cssString = try? String(contentsOfFile: cssPath).components(separatedBy: .newlines).joined() else {
+      return nil
+    }
 
-    let config = WKWebViewConfiguration()
-    config.userContentController = contentController
+    let source = """
+    var style = document.createElement('style');
+    style.innerHTML = '\(cssString)';
+    document.head.appendChild(style);
+    """
     
-    setupWebView(config: config, url: "https://google.com")
+    let script = WKUserScript(source: source, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+    return script
   }
   
   func setupWebView(config: WKWebViewConfiguration, url: String) {
